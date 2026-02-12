@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { client } from '../../utils/sanityClient';
+import NoteContent from '../../components/NoteContent';
+
+export async function getStaticPaths() {
+  const slugs = await client.fetch(`
+    *[_type == "note" && defined(slug.current)] {
+      "slug": slug.current
+    }
+  `);
+
+  return slugs.map((item) => ({
+    params: { slug: item.slug }
+  }));
+}
+
+const { slug } = Astro.params;
+
+const note = await client.fetch(`
+  *[_type == "note" && slug.current == $slug][0] {
+    title,
+    slug,
+    status,
+    body,
+    references[]->{
+      title,
+      slug
+    }
+  }
+`, { slug });
+
+if (!note) {
+  return Astro.redirect('/404');
+}
+
+const statusStyles = {
+  seedling:   'bg-amber-50 text-amber-800 border-amber-200',
+  budding:    'bg-sky-50 text-sky-800 border-sky-200',
+  evergreen:  'bg-emerald-50 text-emerald-800 border-emerald-200'
+};
+
+const badgeClass = statusStyles[note.status] || 'bg-gray-50 text-gray-800 border-gray-200';
+const statusEmoji = {
+  seedling: '🌱',
+  budding: '🌸',
+  evergreen: '🌳'
+};
+---
+
+<BaseLayout title={note.title}>
+  <main class="max-w-3xl mx-auto px-5 sm:px-8 lg:px-10 py-16">
+    <nav class="flex justify-between items-center mb-12 text-sm">
+      <a 
+        href="/" 
+        class="group inline-flex items-center gap-1.5 text-stone-600 hover:text-emerald-700 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-50"
+      >
+        <span class="transition-transform group-hover:-translate-x-0.5">←</span>
+        Home
+      </a>
+      <a 
+        href="/notes" 
+        class="group inline-flex items-center gap-1.5 text-stone-600 hover:text-emerald-700 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-50"
+      >
+        All notes
+        <span class="transition-transform group-hover:translate-x-0.5">→</span>
+      </a>
+    </nav>
+
+    <article class="prose prose-stone max-w-none">
+      <header class="mb-12 not-prose">
+        <div class="flex items-center gap-3 mb-4">
+          <span class={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider rounded-full border font-medium ${badgeClass}`}>
+            <span class="text-base">{statusEmoji[note.status] || '📝'}</span>
+            {note.status ? note.status.charAt(0).toUpperCase() + note.status.slice(1) : 'Note'}
+          </span>
+          <span class="text-xs text-stone-400 font-mono">
+            {new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            })}
+          </span>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl font-serif leading-tight tracking-tight text-stone-900 mb-4">
+          {note.title}
+        </h1>
+        <div class="w-20 h-1 bg-emerald-200 rounded-full mt-4"></div>
+      </header>
+
+      <NoteContent note={note} client:load />
+
+      {note.references?.length > 0 && (
+        <div class="mt-20 not-prose">
+          <div class="max-w-2xl mx-auto">
+            <section class="space-y-4">
+              <h2 class="text-2xl font-serif text-stone-900 flex items-center gap-3 border-b border-stone-200 pb-4">
+                <span class="text-emerald-600 text-xl">→</span>
+                <span>Links from this note</span>
+                <span class="text-sm font-mono text-stone-500 ml-auto bg-stone-100 px-2.5 py-1 rounded-full">
+                  {note.references.length}
+                </span>
+              </h2>
+              <div class="grid gap-4 sm:grid-cols-2">
+                {note.references.map((ref) => (
+                  <a 
+                    href={`/notes/${ref.slug.current}`} 
+                    class="group flex items-center justify-between p-5 bg-white hover:bg-emerald-50 rounded-xl border border-stone-200 hover:border-emerald-200 transition-all shadow-sm hover:shadow"
+                  >
+                    <span class="font-medium text-emerald-700 group-hover:text-emerald-800">
+                      {ref.title}
+                    </span>
+                    <span class="text-emerald-600 group-hover:text-emerald-700 transition-transform group-hover:translate-x-1">
+                      →
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+    </article>
+  </main>
+</BaseLayout>

@@ -1,0 +1,17 @@
+---
+import '../styles/global.css';
+
+const { title = 'The Syntax Orchard' } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+
+  <body class="bg-stone-50 text-stone-900 antialiased min-h-screen">
+    <slot />
+  </body>
+</html>

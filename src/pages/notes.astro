@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { client } from '../utils/sanityClient';
+import NotesFilter from '../components/NoteFilter.jsx';
+
+const notes = await client.fetch(`
+  *[_type == "note"] | order(title asc) {
+    _id,
+    title,
+    slug,
+    status,
+    tags
+  }
+`);
+---
+
+<BaseLayout title="All Notes">
+  <main class="max-w-4xl mx-auto px-5 sm:px-8 lg:px-10 py-24">
+    <nav class="mb-10">
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 text-stone-600 hover:text-emerald-700 font-medium transition-colors"
+      >
+        <span class="transition-transform group-hover:-translate-x-0.5">←</span>
+        Home
+      </a>
+    </nav>
+
+    <header class="mb-16 text-center">
+      <h1 class="text-4xl sm:text-5xl font-serif italic mb-4">
+        All Notes
+      </h1>
+      <p class="text-lg text-stone-600 max-w-2xl mx-auto">
+        Growing thoughts, code snippets, and ideas — one note at a time.
+      </p>
+    </header>
+
+    {notes.length === 0 ? (
+      <div class="text-center py-24 text-stone-500">
+        <p class="text-xl font-medium mb-4">The garden is still young…</p>
+        <p class="text-base">
+          <a href="/admin" class="text-emerald-700 hover:text-emerald-900 underline transition-colors">
+            Start planting notes in the studio →
+          </a>
+        </p>
+      </div>
+    ) : (
+      <NotesFilter client:visible notes={notes} />
+    )}
+  </main>
+</BaseLayout>

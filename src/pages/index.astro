@@ -1,17 +1,78 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { client } from '../utils/sanityClient';
+import NoteCard from '../components/NoteCard';
 
+const notes = await client.fetch(`
+  *[_type == "note"] | order(_createdAt desc) [0...3] {
+    _id,
+    title,
+    slug,
+    status,
+    tags
+  }
+`);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="The Syntax Orchard">
+  <main class="max-w-4xl mx-auto py-24 px-6">
+    <header class="mb-20 text-center">
+      <div class="inline-block mb-6">
+        <span class="text-7xl">🌿</span>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-serif italic mb-6 text-stone-900 tracking-tight">
+        The Syntax Orchard
+      </h1>
+      <p class="text-xl md:text-2xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
+        Cultivating code, thoughts, and growing ideas
+      </p>
+      <div class="w-24 h-1 bg-emerald-200 rounded-full mx-auto mt-8"></div>
+    </header>
+
+    {notes.length === 0 ? (
+      <div class="text-center py-20 bg-stone-50 rounded-2xl border border-stone-200">
+        <span class="text-5xl block mb-6">🌱</span>
+        <p class="text-xl text-stone-600 mb-3">The garden is still young…</p>
+        <p class="text-stone-500">
+          <a href="/admin" class="text-emerald-600 hover:text-emerald-700 font-medium underline decoration-emerald-300 underline-offset-4 hover:decoration-emerald-600 transition-all">
+            Start planting notes in the studio →
+          </a>
+        </p>
+      </div>
+    ) : (
+      <>
+        <div class="flex flex-wrap justify-between items-center mb-10">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-serif text-stone-900">
+              Recent Notes
+            </h2>
+            <p class="text-stone-500 text-sm mt-1">
+              Freshly cultivated thoughts
+            </p>
+          </div>
+          <a 
+            href="/notes" 
+            class="group inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+          >
+            View all notes 
+            <span class="transition-transform group-hover:translate-x-1">→</span>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {notes.map((note) => (
+            <NoteCard note={note} client:load />
+          ))}
+        </div>
+
+        <div class="mt-20 text-center">
+          <div class="inline-flex items-center gap-3 text-stone-400">
+            <hr class="w-12 border-stone-300" />
+            <span class="text-sm">more thoughts waiting to grow</span>
+            <hr class="w-12 border-stone-300" />
+          </div>
+        </div>
+      </>
+    )}
+  </main>
+</BaseLayout>
