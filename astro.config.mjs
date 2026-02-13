@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 import sanity from '@sanity/astro';
 
+import vercel from '@astrojs/vercel';
+
 const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
 
 export default defineConfig({
@@ -22,4 +24,6 @@ export default defineConfig({
       apiVersion: '2025-02-01',
     }),
   ],
+
+  adapter: vercel(),
 });
