@@ -1,23 +1,19 @@
-import { defineConfig } from 'astro/config';
-import { loadEnv } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
-import react from '@astrojs/react';
-import sanity from '@sanity/astro';
-
-const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
+// sanity.config.ts (add at top and update schema)
+import { defineConfig } from 'sanity';
+import { structureTool } from 'sanity/structure';
+import note from './sanity/schemas/note';
 
 export default defineConfig({
-  vite: {
-    plugins: [tailwindcss()],
-  },
-  integrations: [
-    react(),
-    sanity({
-      projectId: env.PUBLIC_SANITY_PROJECT_ID,
-      dataset: env.PUBLIC_SANITY_DATASET || 'production',
-      studioBasePath: '/admin',
-      useCdn: true,
-      apiVersion: '2025-02-01',
-    }),
+  name: 'syntax-orchard',
+  title: 'The Syntax Orchard',
+  projectId: 'm55iuxch',
+  dataset: 'production',
+
+  plugins: [
+    structureTool(),
   ],
+
+  schema: {
+    types: [note],
+  },
 });
